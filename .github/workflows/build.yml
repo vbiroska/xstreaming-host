@@ -105,6 +105,13 @@ jobs:
           GRADLE
           tail -8 app/build.gradle
 
+      - name: R8/D8 novo no AGP 7.4.2 (corrige NPE ao gerar dex)
+        working-directory: xs/android
+        run: |
+          sed -i '0,/dependencies {/s//dependencies {\n        classpath("com.android.tools:r8:8.9.35")/' build.gradle
+          grep -q 'com.android.tools:r8' build.gradle || { echo "nao consegui inserir o R8"; exit 1; }
+          sed -n 1,25p build.gradle
+
       - name: Compilar (release, JS embutido)
         working-directory: xs/android
         run: ./gradlew assembleDevRelease -PreactNativeArchitectures=arm64-v8a --no-daemon --stacktrace
