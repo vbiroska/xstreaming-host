@@ -34,7 +34,7 @@ jobs:
         working-directory: xs
         run: |
           corepack enable
-          yarn install
+          yarn install --no-immutable
 
       - name: Rust (alvos Android)
         run: |
