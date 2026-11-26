@@ -34,7 +34,11 @@ jobs:
         working-directory: xs
         run: |
           corepack enable
-          yarn install --no-immutable
+          yarn install --no-immutable --mode=skip-build
+
+      - name: Patches do XStreaming
+        working-directory: xs
+        run: yarn patch-package
 
       - name: Rust (alvos Android)
         run: |
