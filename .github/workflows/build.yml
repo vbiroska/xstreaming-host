@@ -1,4 +1,4 @@
-name: Build XStreaming + Ryzen (etapa 2a)
+name: Build XStreaming + Ryzen (etapa 2b)
 on:
   workflow_dispatch:
 
@@ -6,7 +6,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      # Este repositório guarda: este arquivo + os 3 zips (etapa1, etapa2 e o Ryzen)
+      # Este repositório guarda: este arquivo + os 3 zips (etapa1, etapa2b e o Ryzen)
       - uses: actions/checkout@v4
 
       - uses: actions/checkout@v4
@@ -30,7 +30,7 @@ jobs:
       - name: Descompactar os zips
         run: |
           unzip -q -o ryzen_engine_etapa1.zip -d xs
-          unzip -q -o ryzen_etapa2.zip -d etapa2
+          unzip -q -o ryzen_etapa2b.zip -d etapa2
           unzip -q -o ryzen_flutter_browser_fix.zip -d ryzen
           ls ryzen/ryzen_app | head
 
@@ -86,31 +86,6 @@ jobs:
           keytool -genkey -v -keystore xstreaming-release-key.keystore -storepass 920712 \
             -alias xstreaming-key -keypass 920712 -keyalg RSA -keysize 2048 -validity 10000 \
             -dname "CN=Ryzen Test,O=Ryzen,C=BR"
-
-      - name: Ajustar JVM target (Java 11 x Kotlin 17)
-        working-directory: xs/android
-        run: |
-          echo "" >> gradle.properties
-          echo "kotlin.jvm.target.validation.mode=warning" >> gradle.properties
-
-      - name: Desligar checagem de metadados AAR (Flutter novo x AGP 7.4.2)
-        working-directory: xs/android
-        run: |
-          cat >> app/build.gradle <<'GRADLE'
-
-          // o script do Ryzen procurava CheckAarMetadata; o nome real e checkDevReleaseAarMetadata
-          tasks.configureEach { t ->
-              if (t.name.startsWith("check") && t.name.endsWith("AarMetadata")) { t.enabled = false }
-          }
-          GRADLE
-          tail -8 app/build.gradle
-
-      - name: R8/D8 novo no AGP 7.4.2 (corrige NPE ao gerar dex)
-        working-directory: xs/android
-        run: |
-          sed -i '0,/dependencies {/s//dependencies {\n        classpath("com.android.tools:r8:8.9.35")/' build.gradle
-          grep -q 'com.android.tools:r8' build.gradle || { echo "nao consegui inserir o R8"; exit 1; }
-          sed -n 1,25p build.gradle
 
       - name: Compilar (release, JS embutido)
         working-directory: xs/android
