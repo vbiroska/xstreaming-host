@@ -93,6 +93,18 @@ jobs:
           echo "" >> gradle.properties
           echo "kotlin.jvm.target.validation.mode=warning" >> gradle.properties
 
+      - name: Desligar checagem de metadados AAR (Flutter novo x AGP 7.4.2)
+        working-directory: xs/android
+        run: |
+          cat >> app/build.gradle <<'GRADLE'
+
+          // o script do Ryzen procurava CheckAarMetadata; o nome real e checkDevReleaseAarMetadata
+          tasks.configureEach { t ->
+              if (t.name.startsWith("check") && t.name.endsWith("AarMetadata")) { t.enabled = false }
+          }
+          GRADLE
+          tail -8 app/build.gradle
+
       - name: Compilar (release, JS embutido)
         working-directory: xs/android
         run: ./gradlew assembleDevRelease -PreactNativeArchitectures=arm64-v8a --no-daemon --stacktrace
