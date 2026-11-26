@@ -1,0 +1,68 @@
+name: Build XStreaming + motor Ryzen (etapa 1)
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # Este repositório só guarda: este arquivo + ryzen_engine_etapa1.zip
+      - uses: actions/checkout@v4
+
+      # O XStreaming é baixado direto do GitHub (mesma versão do seu zip).
+      - uses: actions/checkout@v4
+        with:
+          repository: Geocld/XStreaming
+          ref: 7fc4e41b5c3e6d08f4bb032820d461c6699e6adc
+          path: xs
+
+      - name: Aplicar a etapa 1
+        working-directory: xs
+        run: |
+          unzip -q -o "$GITHUB_WORKSPACE/ryzen_engine_etapa1.zip" -d .
+          python3 ryzen_engine/apply_ryzen_engine.py
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Yarn
+        working-directory: xs
+        run: |
+          corepack enable
+          yarn install
+
+      - name: Rust (alvos Android)
+        run: |
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+          rustup target add aarch64-linux-android armv7-linux-androideabi
+
+      - name: NDK 23 e CMake
+        run: |
+          SDKM="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          for i in 1 2 3; do
+            yes | "$SDKM" --install "ndk;23.1.7779620" "cmake;3.22.1" && break
+            sleep 10
+          done
+
+      - name: Chave de assinatura de teste
+        working-directory: xs/android/app
+        run: |
+          keytool -genkey -v -keystore xstreaming-release-key.keystore -storepass 920712 \
+            -alias xstreaming-key -keypass 920712 -keyalg RSA -keysize 2048 -validity 10000 \
+            -dname "CN=Ryzen Test,O=Ryzen,C=BR"
+
+      - name: Compilar (release, JS embutido)
+        working-directory: xs/android
+        run: ./gradlew assembleDevRelease -PreactNativeArchitectures=arm64-v8a --no-daemon --stacktrace
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: xstreaming-engine-apk
+          path: xs/android/app/build/outputs/apk/dev/release/*.apk
