@@ -1,4 +1,4 @@
-name: Build XStreaming + motor Ryzen (etapa 1)
+name: Build XStreaming + Ryzen (etapa 2a)
 on:
   workflow_dispatch:
 
@@ -6,21 +6,14 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      # Este repositório só guarda: este arquivo + ryzen_engine_etapa1.zip
+      # Este repositório guarda: este arquivo + os 3 zips (etapa1, etapa2 e o Ryzen)
       - uses: actions/checkout@v4
 
-      # O XStreaming é baixado direto do GitHub (mesma versão do seu zip).
       - uses: actions/checkout@v4
         with:
           repository: Geocld/XStreaming
           ref: 7fc4e41b5c3e6d08f4bb032820d461c6699e6adc
           path: xs
-
-      - name: Aplicar a etapa 1
-        working-directory: xs
-        run: |
-          unzip -q -o "$GITHUB_WORKSPACE/ryzen_engine_etapa1.zip" -d .
-          python3 ryzen_engine/apply_ryzen_engine.py
 
       - uses: actions/setup-node@v4
         with:
@@ -29,6 +22,37 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Descompactar os zips
+        run: |
+          unzip -q -o ryzen_engine_etapa1.zip -d xs
+          unzip -q -o ryzen_etapa2.zip -d etapa2
+          unzip -q -o ryzen_flutter_browser_fix.zip -d ryzen
+          ls ryzen/ryzen_app | head
+
+      # ---------- Ryzen vira biblioteca (AAR) ----------
+      - name: Ryzen como módulo Flutter
+        working-directory: ryzen/ryzen_app
+        run: |
+          python3 "$GITHUB_WORKSPACE/etapa2/apply_ryzen_dart.py"
+          flutter pub get
+
+      - name: Compilar o AAR do Ryzen
+        working-directory: ryzen/ryzen_app
+        run: flutter build aar --no-debug --no-profile --target-platform android-arm64 --build-number=1.0
+
+      # ---------- XStreaming + motor + Ryzen ----------
+      - name: Aplicar etapas 1 e 2 no XStreaming
+        working-directory: xs
+        run: |
+          python3 ryzen_engine/apply_ryzen_engine.py
+          RYZEN_APP="$GITHUB_WORKSPACE/ryzen/ryzen_app" \
+          RYZEN_REPO="$GITHUB_WORKSPACE/ryzen/ryzen_app/build/host/outputs/repo" \
+          python3 "$GITHUB_WORKSPACE/etapa2/apply_ryzen_host.py"
 
       - name: Yarn
         working-directory: xs
@@ -39,7 +63,6 @@ jobs:
       - name: Patches do XStreaming
         working-directory: xs
         run: |
-          # o patch do react-native-paper vem corrompido no repositório (só mexe num espaçamento de UI)
           rm -f patches/react-native-paper+5.12.5.patch
           yarn patch-package
 
@@ -71,5 +94,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: xstreaming-engine-apk
+          name: ryzen-xstreaming-apk
           path: xs/android/app/build/outputs/apk/dev/release/*.apk
