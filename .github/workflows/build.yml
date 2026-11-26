@@ -38,7 +38,10 @@ jobs:
 
       - name: Patches do XStreaming
         working-directory: xs
-        run: yarn patch-package
+        run: |
+          # o patch do react-native-paper vem corrompido no repositório (só mexe num espaçamento de UI)
+          rm -f patches/react-native-paper+5.12.5.patch
+          yarn patch-package
 
       - name: Rust (alvos Android)
         run: |
