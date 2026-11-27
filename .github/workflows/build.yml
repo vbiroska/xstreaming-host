@@ -1,4 +1,4 @@
-name: Build XStreaming + Ryzen (etapa 3: render native)
+name: "Build XStreaming + Ryzen (etapa 3: render native)"
 on:
   workflow_dispatch:
 
