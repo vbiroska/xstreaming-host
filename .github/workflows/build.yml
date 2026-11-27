@@ -1,4 +1,4 @@
-name: Build XStreaming + Ryzen (etapa 2b)
+name: Build XStreaming + Ryzen (etapa 3: render native)
 on:
   workflow_dispatch:
 
@@ -6,7 +6,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      # Este repositório guarda: este arquivo + os 3 zips (etapa1, etapa2b e o Ryzen)
+      # Este repositório guarda: este arquivo + os 4 zips (etapa1, etapa2b, etapa3 e o Ryzen)
       - uses: actions/checkout@v4
 
       - uses: actions/checkout@v4
@@ -31,6 +31,7 @@ jobs:
         run: |
           unzip -q -o ryzen_engine_etapa1.zip -d xs
           unzip -q -o ryzen_etapa2b.zip -d etapa2
+          unzip -q -o ryzen_etapa3.zip -d etapa3
           unzip -q -o ryzen_flutter_browser_fix.zip -d ryzen
           ls ryzen/ryzen_app | head
 
@@ -39,6 +40,7 @@ jobs:
         working-directory: ryzen/ryzen_app
         run: |
           python3 "$GITHUB_WORKSPACE/etapa2/apply_ryzen_dart.py"
+          python3 "$GITHUB_WORKSPACE/etapa3/apply_native_dart.py"
           flutter pub get
 
       - name: Compilar o AAR do Ryzen
@@ -53,6 +55,7 @@ jobs:
           RYZEN_APP="$GITHUB_WORKSPACE/ryzen/ryzen_app" \
           RYZEN_REPO="$GITHUB_WORKSPACE/ryzen/ryzen_app/build/host/outputs/repo" \
           python3 "$GITHUB_WORKSPACE/etapa2/apply_ryzen_host.py"
+          python3 "$GITHUB_WORKSPACE/etapa3/apply_native_host.py"
 
       - name: Yarn
         working-directory: xs
