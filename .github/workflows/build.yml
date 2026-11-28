@@ -1,4 +1,4 @@
-name: "Build XStreaming + Ryzen (etapa 4: loja Xbox + obter)"
+name: "Build XStreaming + Ryzen (etapa 5: capas da loja nova)"
 on:
   workflow_dispatch:
 
@@ -6,7 +6,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      # Este repositório guarda: este arquivo + os 5 zips (etapa1, etapa2b, etapa3, etapa4 e o Ryzen)
+      # Este repositório guarda: este arquivo + os 6 zips (etapa1, etapa2b, etapa3, etapa4, etapa5 e o Ryzen)
       - uses: actions/checkout@v4
 
       - uses: actions/checkout@v4
@@ -33,6 +33,7 @@ jobs:
           unzip -q -o ryzen_etapa2b.zip -d etapa2
           unzip -q -o ryzen_etapa3.zip -d etapa3
           unzip -q -o ryzen_etapa4.zip -d etapa4
+          unzip -q -o ryzen_etapa5.zip -d etapa5
           unzip -q -o ryzen_flutter_browser_fix.zip -d ryzen
           ls ryzen/ryzen_app | head
 
@@ -43,6 +44,7 @@ jobs:
           python3 "$GITHUB_WORKSPACE/etapa2/apply_ryzen_dart.py"
           python3 "$GITHUB_WORKSPACE/etapa3/apply_native_dart.py"
           python3 "$GITHUB_WORKSPACE/etapa4/apply_store_dart.py"
+          python3 "$GITHUB_WORKSPACE/etapa5/apply_covers_dart.py"
           flutter pub get
 
       - name: Compilar o AAR do Ryzen
